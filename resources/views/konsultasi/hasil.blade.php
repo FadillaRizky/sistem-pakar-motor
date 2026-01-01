@@ -1,123 +1,141 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-4xl mx-auto">
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">Hasil Diagnosa</h1>
-            <p class="text-lg text-gray-600">Berdasarkan {{ $jumlahGejalaDipilih }} gejala yang Anda pilih</p>
-        </div>
+<div class="mb-6">
+    <h1 class="text-3xl font-bold text-white mb-2">Hasil Diagnosa</h1>
+    <p class="text-gray-400">Hasil analisis kerusakan motor berdasarkan gejala yang Anda pilih</p>
+</div>
 
-        @if($hasilTop)
-            <!-- Hasil Utama (Confidence Tertinggi) -->
-            <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg shadow-lg p-8 mb-8">
-                <div class="mb-4">
-                    <h2 class="text-3xl font-bold mb-2">{{ $hasilTop['nama_kerusakan'] }}</h2>
-                    <p class="text-blue-100">{{ $hasilTop['deskripsi'] }}</p>
+@if($hasil)
+    <!-- Result Card -->
+    <div class="bg-gradient-to-r from-green-900 to-green-800 rounded-lg shadow-lg overflow-hidden mb-6 border-l-4 border-green-500">
+        <div class="p-6">
+            <h2 class="text-2xl font-bold text-green-100 mb-4">
+                <i class="fas fa-check-circle"></i> Diagnosis Kerusakan
+            </h2>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-green-200 text-sm font-semibold mb-2">Kode Kerusakan</label>
+                    <p class="text-white text-xl font-bold">{{ $hasil->kode_kerusakan }}</p>
                 </div>
 
-                <!-- Confidence Score -->
-                <div class="mb-6">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-lg font-semibold">Tingkat Keyakinan Diagnosa</span>
-                        <span class="text-3xl font-bold">{{ $hasilTop['confidence'] }}%</span>
-                    </div>
-                    <div class="w-full bg-blue-200 rounded-full h-4">
-                        <div
-                            class="bg-green-400 h-4 rounded-full"
-                            style="width: {{ $hasilTop['confidence'] }}%"
-                        ></div>
-                    </div>
+                <div>
+                    <label class="block text-green-200 text-sm font-semibold mb-2">Nama Kerusakan</label>
+                    <p class="text-white text-lg">{{ $hasil->nama_kerusakan }}</p>
                 </div>
 
-                <!-- Solusi -->
-                <div class="bg-blue-700 rounded-lg p-4">
-                    <h3 class="text-xl font-bold mb-2">✓ Solusi Rekomendasi</h3>
-                    <p class="text-blue-50">{{ $hasilTop['solusi'] }}</p>
+                <div class="col-span-2">
+                    <label class="block text-green-200 text-sm font-semibold mb-2">Deskripsi</label>
+                    <p class="text-gray-100 leading-relaxed">{{ $hasil->deskripsi }}</p>
+                </div>
+
+                <div class="col-span-2">
+                    <label class="block text-green-200 text-sm font-semibold mb-2">Solusi/Cara Perbaikan</label>
+                    <p class="text-gray-100 leading-relaxed">{{ $hasil->solusi }}</p>
                 </div>
             </div>
-
-            <!-- Gejala yang Cocok -->
-            <div class="bg-white rounded-lg shadow-md p-8 mb-8">
-                <h3 class="text-2xl font-semibold text-gray-800 mb-4">
-                    Gejala yang Cocok ({{ $hasilTop['gejala_cocok'] }}/{{ $hasilTop['total_gejala_rule'] }})
-                </h3>
-                <div class="space-y-2">
-                    @foreach($gejalaYangDipilih as $gejalaId)
-                        @php
-                            $gejalaData = \App\Models\Gejala::find($gejalaId);
-                        @endphp
-                        @if($gejalaData)
-                        <div class="flex items-center text-gray-700">
-                            <span class="text-green-500 mr-3">✓</span>
-                            <div>
-                                <span class="font-medium">{{ $gejalaData->kode_gejala }}</span> - {{ $gejalaData->nama_gejala }}
-                            </div>
-                        </div>
-                        @endif
-                    @endforeach
-                </div>
-            </div>
-
-            <!-- Diagnosa Alternatif -->
-            @if(count($semuaHasil) > 1)
-            <div class="bg-white rounded-lg shadow-md p-8 mb-8">
-                <h3 class="text-2xl font-semibold text-gray-800 mb-4">Diagnosa Alternatif</h3>
-                <div class="space-y-4">
-                    @foreach($semuaHasil as $key => $hasil)
-                        @if($key > 0) <!-- Skip hasil pertama karena sudah ditampilkan -->
-                        <div class="border-l-4 border-blue-400 pl-4 py-2">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <h4 class="font-semibold text-gray-800">{{ $hasil['nama_kerusakan'] }}</h4>
-                                    <p class="text-sm text-gray-600">{{ $hasil['deskripsi'] }}</p>
-                                </div>
-                                <span class="font-bold text-blue-600 text-lg">{{ $hasil['confidence'] }}%</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div
-                                    class="bg-blue-400 h-2 rounded-full"
-                                    style="width: {{ $hasil['confidence'] }}%"
-                                ></div>
-                            </div>
-                        </div>
-                        @endif
-                    @endforeach
-                </div>
-            </div>
-            @endif
-        @else
-            <!-- Jika tidak ada hasil -->
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center">
-                <h3 class="text-2xl font-semibold text-yellow-900 mb-2">Tidak Ada Diagnosa</h3>
-                <p class="text-yellow-800 mb-4">
-                    Kombinasi gejala yang Anda pilih tidak sesuai dengan data yang ada dalam sistem.
-                </p>
-                <a
-                    href="{{ route('konsultasi.index') }}"
-                    class="inline-block bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200"
-                >
-                    Coba Lagi
-                </a>
-            </div>
-        @endif
-
-        <!-- Tombol Aksi -->
-        <div class="flex gap-4 mt-8">
-            <a
-                href="{{ route('konsultasi.index') }}"
-                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 text-center"
-            >
-                Konsultasi Baru
-            </a>
-            <a
-                href="/"
-                class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg transition duration-200 text-center"
-            >
-                Kembali ke Home
-            </a>
         </div>
     </div>
+
+    <!-- Confidence Score -->
+    <div class="grid grid-cols-3 gap-4 mb-6">
+        <!-- Persentase -->
+        <div class="bg-gray-900 p-6 rounded-lg border border-gray-700">
+            <label class="block text-gray-400 text-sm font-semibold mb-2">Tingkat Kepercayaan</label>
+            <div class="flex items-baseline">
+                <span class="text-4xl font-bold text-yellow-400">{{ number_format($persentase, 1) }}%</span>
+            </div>
+            <div class="mt-4 bg-gray-800 rounded-full h-2 overflow-hidden">
+                <div class="bg-gradient-to-r from-yellow-400 to-yellow-600 h-full"
+                     style="width: {{ $persentase }}%"></div>
+            </div>
+            <p class="text-gray-400 text-xs mt-2">
+                @if($persentase >= 80)
+                    <span class="text-green-400">✓ Sangat Akurat</span>
+                @elseif($persentase >= 60)
+                    <span class="text-blue-400">✓ Akurat</span>
+                @elseif($persentase >= 40)
+                    <span class="text-yellow-400">⚠ Cukup Akurat</span>
+                @else
+                    <span class="text-red-400">✗ Kurang Akurat</span>
+                @endif
+            </p>
+        </div>
+
+        <!-- Gejala Dipilih -->
+        <div class="bg-gray-900 p-6 rounded-lg border border-gray-700">
+            <label class="block text-gray-400 text-sm font-semibold mb-2">Total Gejala Dipilih</label>
+            <div class="text-4xl font-bold text-blue-400">{{ $jumlahGejalaDipilih }}</div>
+            <p class="text-gray-400 text-xs mt-3">Gejala yang Anda pilih</p>
+        </div>
+
+        <!-- Gejala Cocok -->
+        <div class="bg-gray-900 p-6 rounded-lg border border-gray-700">
+            <label class="block text-gray-400 text-sm font-semibold mb-2">Gejala Cocok</label>
+            <div class="text-4xl font-bold text-green-400">{{ count($gejalaCocok) }}</div>
+            <p class="text-gray-400 text-xs mt-3">Dari kerusakan yang terdeteksi</p>
+        </div>
+    </div>
+
+    <!-- Gejala Section -->
+    <div class="bg-gray-900 p-6 rounded-lg border border-gray-700 mb-6">
+        <h3 class="text-xl font-bold text-blue-400 mb-4">
+            <i class="fas fa-list-check"></i> Detail Gejala
+        </h3>
+
+        <div class="grid grid-cols-1 gap-3 max-h-64 overflow-y-auto">
+            @php
+                $allGejalas = \App\Models\Gejala::whereIn('id', $userGejala)->get();
+            @endphp
+
+            @foreach($allGejalas as $gejala)
+                <div class="p-4 bg-gray-800 rounded-lg border-l-4 {{ in_array($gejala->id, $gejalaCocok) ? 'border-green-500' : 'border-gray-600' }}">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <p class="font-bold {{ in_array($gejala->id, $gejalaCocok) ? 'text-green-400' : 'text-gray-400' }}">
+                                {{ $gejala->kode_gejala }}
+                            </p>
+                            <p class="text-white font-semibold mt-1">{{ $gejala->nama_gejala }}</p>
+                            <p class="text-gray-400 text-sm mt-2">{{ $gejala->deskripsi }}</p>
+                        </div>
+                        <span class="ml-3 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap
+                                   {{ in_array($gejala->id, $gejalaCocok) ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-300' }}">
+                            {{ in_array($gejala->id, $gejalaCocok) ? '✓ Cocok' : '○ Dipilih' }}
+                        </span>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
+@else
+    <!-- No Result Card -->
+    <div class="bg-yellow-900 border border-yellow-700 rounded-lg p-6 mb-6">
+        <h3 class="text-xl font-bold text-yellow-200 mb-2">
+            <i class="fas fa-exclamation-triangle"></i> Diagnosa Tidak Ditemukan
+        </h3>
+        <p class="text-yellow-100">
+            Tidak ada kerusakan yang cocok dengan gejala yang Anda pilih.
+            Silakan coba lagi dengan gejala yang berbeda.
+        </p>
+    </div>
+@endif
+
+<!-- Action Buttons -->
+<div class="flex gap-3">
+    <a href="{{ route('konsultasi.index') }}"
+       class="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600
+              text-white font-semibold rounded-lg shadow
+              hover:opacity-90 transition text-center">
+        <i class="fas fa-redo"></i> Diagnosa Lagi
+    </a>
+
+    <a href="javascript:history.back()"
+       class="flex-1 px-6 py-3 bg-gray-700 text-white font-semibold rounded-lg shadow
+              hover:bg-gray-600 transition text-center">
+        <i class="fas fa-arrow-left"></i> Kembali
+    </a>
 </div>
+
 @endsection

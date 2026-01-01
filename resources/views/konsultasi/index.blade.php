@@ -1,73 +1,116 @@
-@extends('layouts.app')
+@extends('layouts.app') {{-- DULUNYA layouts.admin --}}
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-2xl mx-auto">
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">Sistem Pakar Diagnosa Motor</h1>
-            <p class="text-lg text-gray-600">Pilih gejala yang Anda alami untuk mendapatkan diagnosa kerusakan motor</p>
-        </div>
+<div class="mb-6">
+    <h1 class="text-3xl font-bold text-white mb-2">Konsultasi Diagnosa Motor</h1>
+    <p class="text-gray-400">Pilih gejala yang Anda alami untuk mendapatkan diagnosis kerusakan motor</p>
+</div>
 
-        <!-- Form Konsultasi -->
-        <form action="{{ route('konsultasi.proses') }}" method="POST" class="bg-white rounded-lg shadow-md p-8">
-            @csrf
+<!-- Info Card -->
+<div class="bg-blue-900 border border-blue-700 rounded-lg p-4 mb-6">
+    <p class="text-blue-100 text-sm">
+        <i class="fas fa-info-circle"></i> <strong>Cara Menggunakan:</strong>
+        Centang gejala-gejala yang Anda alami pada motor, lalu klik tombol "Diagnosa" untuk mendapatkan hasil analisis.
+    </p>
+</div>
 
-            <div class="mb-6">
-                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Pilih Gejala</h2>
+<div class="max-w-4xl">
+    <form action="{{ route('konsultasi.proses') }}" method="POST" class="bg-gray-900 p-6 rounded-lg border border-gray-700 shadow-lg">
+        @csrf
 
-                @if ($errors->has('gejala_ids'))
-                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                        {{ $errors->first('gejala_ids') }}
-                    </div>
-                @endif
+        <!-- Gejala List -->
+        <div class="mb-6">
+            <label class="block text-white font-bold text-lg mb-4">
+                <i class="fas fa-list-check"></i> Pilih Gejala
+            </label>
 
-                <div class="space-y-3">
-                    @forelse($gejalas as $gejala)
-                    <div class="flex items-start">
-                        <input
-                            type="checkbox"
-                            name="gejala_ids[]"
-                            value="{{ $gejala->id }}"
-                            id="gejala_{{ $gejala->id }}"
-                            class="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
-                        >
-                        <label for="gejala_{{ $gejala->id }}" class="ml-3 cursor-pointer">
-                            <div class="font-medium text-gray-800">{{ $gejala->kode_gejala }} - {{ $gejala->nama_gejala }}</div>
-                            <div class="text-sm text-gray-600">{{ $gejala->deskripsi }}</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @forelse($gejalas as $gejala)
+                    <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 hover:border-blue-500 transition cursor-pointer"
+                         onclick="toggleCheckbox(this)">
+                        <label class="flex items-start cursor-pointer">
+                            <input type="checkbox"
+                                   name="gejala_ids[]"
+                                   value="{{ $gejala->id }}"
+                                   class="gejala-checkbox mt-1 w-5 h-5 cursor-pointer"
+                                   onchange="updateCounter()">
+                            <span class="ml-3 flex-1">
+                                <strong class="text-blue-400 block">{{ $gejala->kode_gejala }}</strong>
+                                <span class="text-white block font-semibold mt-1">{{ $gejala->nama_gejala }}</span>
+                                <span class="text-gray-400 text-sm block mt-2">{{ $gejala->deskripsi }}</span>
+                            </span>
                         </label>
                     </div>
-                    @empty
-                    <p class="text-gray-500">Tidak ada gejala yang tersedia</p>
-                    @endforelse
+                @empty
+                    <div class="col-span-2 p-6 bg-yellow-900 border border-yellow-700 rounded-lg text-yellow-200 text-center">
+                        <i class="fas fa-inbox" style="font-size: 2rem;"></i>
+                        <p class="mt-2">Tidak ada gejala tersedia</p>
+                    </div>
+                @endforelse
+            </div>
+
+            <!-- Counter -->
+            <div class="mt-4 p-3 bg-blue-900 border border-blue-700 rounded-lg text-blue-200">
+                <strong>Gejala Dipilih:</strong> <span id="gejala-count">0</span> gejala
+            </div>
+
+            @error('gejala_ids')
+                <div class="mt-3 p-3 bg-red-900 border border-red-700 rounded-lg text-red-200">
+                    <i class="fas fa-exclamation-circle"></i> {{ $message }}
                 </div>
-            </div>
-
-            <!-- Tombol Submit -->
-            <div class="flex gap-4">
-                <button
-                    type="submit"
-                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200"
-                >
-                    Mulai Diagnosa
-                </button>
-                <a
-                    href="/"
-                    class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg transition duration-200 text-center"
-                >
-                    Kembali
-                </a>
-            </div>
-        </form>
-
-        <!-- Info Box -->
-        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <h3 class="font-semibold text-blue-900 mb-2">💡 Informasi Penting</h3>
-            <p class="text-blue-800 text-sm">
-                Sistem ini menggunakan metode Forward Chaining untuk mendiagnosa kerusakan motor berdasarkan gejala yang Anda pilih.
-                Semakin banyak gejala yang Anda pilih, semakin akurat hasil diagnosa.
-            </p>
+            @enderror
         </div>
+
+        <!-- Submit Button -->
+        <div class="flex gap-3">
+            <button type="submit"
+                    class="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600
+                           text-white font-bold rounded-lg shadow-lg
+                           hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    id="submit-btn"
+                    disabled>
+                <i class="fas fa-stethoscope"></i> Diagnosa Sekarang
+            </button>
+
+            <a href="{{ route('dashboard') }}"
+               class="px-6 py-3 bg-gray-700 text-white font-semibold rounded-lg shadow-lg
+                      hover:bg-gray-600 transition text-center">
+                <i class="fas fa-times"></i> Batal
+            </a>
+        </div>
+    </form>
+
+    <!-- Tips Section -->
+    <div class="mt-6 bg-gray-900 p-6 rounded-lg border border-gray-700">
+        <h3 class="text-lg font-bold text-yellow-400 mb-3">
+            <i class="fas fa-lightbulb"></i> Tips Diagnosis
+        </h3>
+        <ul class="text-gray-300 space-y-2 text-sm">
+            <li>✓ Pilih gejala yang paling jelas Anda rasakan</li>
+            <li>✓ Semakin banyak gejala yang dipilih, semakin akurat hasilnya</li>
+            <li>✓ Hasil diagnosis adalah rekomendasi, konsultasikan dengan mekanik profesional</li>
+            <li>✓ Anda bisa melakukan diagnosis berkali-kali dengan gejala berbeda</li>
+        </ul>
     </div>
 </div>
+
+<script>
+    function toggleCheckbox(card) {
+        const checkbox = card.querySelector('.gejala-checkbox');
+        checkbox.checked = !checkbox.checked;
+        updateCounter();
+    }
+
+    function updateCounter() {
+        const count = document.querySelectorAll('.gejala-checkbox:checked').length;
+        document.getElementById('gejala-count').textContent = count;
+        document.getElementById('submit-btn').disabled = count === 0;
+    }
+
+    document.querySelectorAll('.gejala-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateCounter);
+    });
+
+    updateCounter();
+</script>
 @endsection

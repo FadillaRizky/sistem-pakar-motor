@@ -1,47 +1,52 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\KonsultasiController;
 use App\Http\Controllers\GejalaController;
 use App\Http\Controllers\KerusakanController;
 use App\Http\Controllers\RuleController;
-use App\Http\Controllers\KonsultasiController;
+use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| Public
+|--------------------------------------------------------------------------
+*/
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 /*
 |--------------------------------------------------------------------------
-| Dashboard Admin
+| USER (role=user)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'role:user'])->group(function () {
+    Route::get('/dashboard', function () {
+        return view('user.dashboard');
+    })->name('dashboard');
 
-    Route::get('/dashboard', [DashboardController::class, 'index'])
-        ->name('dashboard');
+     Route::get('/konsultasi', [KonsultasiController::class, 'index'])->name('konsultasi.index');
+    Route::post('/konsultasi/proses', [KonsultasiController::class, 'proses'])->name('konsultasi.proses');
+});
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN (role=admin)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/dashboard', function () {
+        return view('admin.dashboard');
+    })->name('admin.dashboard');
+
+    // kalau admin juga punya konsultasi sendiri
+    Route::get('/admin/konsultasi', [KonsultasiController::class, 'indexAdmin'])->name('konsultasi.admin');
+    Route::post('/admin/konsultasi/proses', [KonsultasiController::class, 'prosesAdmin'])->name('konsultasi.admin.proses');
 
     Route::resource('gejala', GejalaController::class);
     Route::resource('kerusakan', KerusakanController::class);
     Route::resource('rule', RuleController::class);
-
-
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// USER
-Route::get('/', function () {
-    return view('user.home');
-});
+require __DIR__.'/auth.php';
 
-Route::get('/konsultasi', [KonsultasiController::class, 'index'])
-    ->name('konsultasi.index');
-
-Route::post('/konsultasi/proses', [KonsultasiController::class, 'proses'])
-    ->name('konsultasi.proses');
-
-
-require __DIR__ . '/auth.php';

@@ -9,66 +9,126 @@ use Illuminate\Http\Request;
 
 class RuleController extends Controller
 {
-public function index()
-{
-    $rules = Rule::with('kerusakan')->get();
-
-    // ⬇️ INI KUNCI UTAMA
-    $gejalas = Gejala::all()->keyBy('id');
-
-    return view('rule.index', compact('rules', 'gejalas'));
-}
-
-
-    public function create()
-{
-    $kerusakans = Kerusakan::all();
-    $gejalas = Gejala::all();
-
-    return view('rule.create', compact('kerusakans', 'gejalas'));
-}
-
-    public function store(Request $request)
+    /**
+     * Display a listing of the rules.
+     */
+    public function index()
     {
-        $request->validate([
-            'kerusakan_id' => 'required',
-            'gejala_ids' => 'required|array'
-        ]);
+        $rules = Rule::with('kerusakan')->get();
+        $gejalas = Gejala::all();
 
-        Rule::create([
-    'kerusakan_id' => $request->kerusakan_id,
-    'gejala_ids'   => $request->gejala_ids, // ARRAY
-]);
-
-
-        return redirect()->route('rule.index')->with('success', 'Rule berhasil ditambahkan');
+        return view('rule.index', compact('rules', 'gejalas'));
     }
 
-    public function edit(Rule $rule)
+    /**
+     * Show the form for creating a new rule.
+     */
+    public function create()
     {
         $gejalas = Gejala::all();
         $kerusakans = Kerusakan::all();
+
+        return view('rule.create', compact('gejalas', 'kerusakans'));
+    }
+
+    /**
+     * Store a newly created rule in storage.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'kerusakan_id' => 'required|exists:kerusakans,id',
+            'gejala_ids' => 'required|array|min:1',
+            'gejala_ids.*' => 'exists:gejalas,id',
+            'certainty_factor' => 'required|numeric|min:0|max:1'
+        ], [
+            'kerusakan_id.required' => 'Pilih kerusakan terlebih dahulu',
+            'kerusakan_id.exists' => 'Kerusakan tidak valid',
+            'gejala_ids.required' => 'Pilih minimal satu gejala',
+            'gejala_ids.min' => 'Pilih minimal satu gejala',
+            'gejala_ids.*.exists' => 'Ada gejala yang tidak valid',
+            'certainty_factor.required' => 'Masukkan nilai Certainty Factor',
+            'certainty_factor.numeric' => 'Certainty Factor harus berupa angka',
+            'certainty_factor.min' => 'Certainty Factor minimal 0',
+            'certainty_factor.max' => 'Certainty Factor maksimal 1'
+        ]);
+
+        // Convert array ke JSON
+        $validated['gejala_ids'] = json_encode($validated['gejala_ids']);
+
+        Rule::create($validated);
+
+        return redirect()->route('rule.index')
+                        ->with('success', 'Rule berhasil ditambahkan!');
+    }
+
+    /**
+     * Display the specified rule.
+     */
+    public function show(Rule $rule)
+    {
+        $rule->load('kerusakan');
+        $gejalas = Gejala::all();
+
+        return view('rule.show', compact('rule', 'gejalas'));
+    }
+
+    /**
+     * Show the form for editing the specified rule.
+     */
+    public function edit(Rule $rule)
+    {
+        $rule->load('kerusakan');
+        $gejalas = Gejala::all();
+        $kerusakans = Kerusakan::all();
+
+        // Convert gejala_ids dari JSON ke array jika perlu
+        if (is_string($rule->gejala_ids)) {
+            $rule->gejala_ids = json_decode($rule->gejala_ids, true);
+        }
+
         return view('rule.edit', compact('rule', 'gejalas', 'kerusakans'));
     }
 
+    /**
+     * Update the specified rule in storage.
+     */
     public function update(Request $request, Rule $rule)
     {
-        $request->validate([
-            'kerusakan_id' => 'required',
-            'gejala_ids' => 'required|array'
+        $validated = $request->validate([
+            'kerusakan_id' => 'required|exists:kerusakans,id',
+            'gejala_ids' => 'required|array|min:1',
+            'gejala_ids.*' => 'exists:gejalas,id',
+            'certainty_factor' => 'required|numeric|min:0|max:1'
+        ], [
+            'kerusakan_id.required' => 'Pilih kerusakan terlebih dahulu',
+            'kerusakan_id.exists' => 'Kerusakan tidak valid',
+            'gejala_ids.required' => 'Pilih minimal satu gejala',
+            'gejala_ids.min' => 'Pilih minimal satu gejala',
+            'gejala_ids.*.exists' => 'Ada gejala yang tidak valid',
+            'certainty_factor.required' => 'Masukkan nilai Certainty Factor',
+            'certainty_factor.numeric' => 'Certainty Factor harus berupa angka',
+            'certainty_factor.min' => 'Certainty Factor minimal 0',
+            'certainty_factor.max' => 'Certainty Factor maksimal 1'
         ]);
 
-        $rule->update([
-            'kerusakan_id' => $request->kerusakan_id,
-            'gejala_ids' => $request->gejala_ids
-        ]);
+        // Convert array ke JSON
+        $validated['gejala_ids'] = json_encode($validated['gejala_ids']);
 
-        return redirect()->route('rule.index')->with('success', 'Rule berhasil diperbarui');
+        $rule->update($validated);
+
+        return redirect()->route('rule.index')
+                        ->with('success', 'Rule berhasil diperbarui!');
     }
 
+    /**
+     * Remove the specified rule from storage.
+     */
     public function destroy(Rule $rule)
     {
         $rule->delete();
-        return redirect()->route('rule.index')->with('success', 'Rule berhasil dihapus');
+
+        return redirect()->route('rule.index')
+                        ->with('success', 'Rule berhasil dihapus!');
     }
 }
