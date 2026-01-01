@@ -8,19 +8,23 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('rules', function (Blueprint $table) {
+        Schema::create('konsultasis', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')
+                  ->nullable()
+                  ->constrained()
+                  ->cascadeOnDelete();
             $table->foreignId('kerusakan_id')
                   ->constrained('kerusakans')
                   ->cascadeOnDelete();
-            $table->json('gejala_ids');
-            $table->float('certainty_factor')->default(1.0);
+            $table->json('gejala_dipilih');
+            $table->float('confidence')->default(0);
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('rules');
+        Schema::dropIfExists('konsultasis');
     }
 };
