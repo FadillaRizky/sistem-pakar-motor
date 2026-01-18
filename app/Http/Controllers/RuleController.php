@@ -14,8 +14,8 @@ class RuleController extends Controller
      */
     public function index()
     {
-        $rules = Rule::with('kerusakan')->get();
-        $gejalas = Gejala::all();
+        $rules = Rule::with('kerusakan')->latest()->paginate(10);
+        $gejalas = \App\Models\Gejala::all();
 
         return view('rule.index', compact('rules', 'gejalas'));
     }

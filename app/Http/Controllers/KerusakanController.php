@@ -9,7 +9,7 @@ class KerusakanController extends Controller
 {
     public function index()
     {
-        $kerusakans = Kerusakan::all();
+        $kerusakans = Kerusakan::latest()->paginate(10);
         return view('kerusakan.index', compact('kerusakans'));
     }
 

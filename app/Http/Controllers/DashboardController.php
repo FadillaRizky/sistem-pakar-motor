@@ -5,17 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Gejala;
 use App\Models\Kerusakan;
 use App\Models\Rule;
-use App\Models\User;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        return view('dashboard', [
-            'gejala'     => Gejala::count(),
-            'kerusakan'  => Kerusakan::count(),
-            'rule'       => Rule::count(),
-            'user'       => User::count(),
-        ]);
+        $gejalas = Gejala::latest()->take(5)->get();
+        $kerusakans = Kerusakan::latest()->take(5)->get();
+        $rules = Rule::with(['kerusakan'])->latest()->take(5)->get();
+
+        return view('dashboard', compact('gejalas', 'kerusakans', 'rules'));
     }
 }
